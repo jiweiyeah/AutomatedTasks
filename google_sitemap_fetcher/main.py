@@ -65,7 +65,7 @@ def _fetch_bytes(session: requests.Session, url: str, timeout_sec: int) -> bytes
         url,
         timeout=timeout_sec,
         headers={
-            "User-Agent": "ssl-monitor-worker/1.0 (sitemap fetcher)",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "application/xml,text/xml,*/*",
         },
     )
