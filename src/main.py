@@ -603,6 +603,7 @@ def run_monitor(
         domains_expiring = 0
         domains_expired = 0
         domains_error = 0
+        summary = None
         
         try:
             # 加载现有进度（断点续作）
@@ -620,39 +621,42 @@ def run_monitor(
             # 记录恢复信息
             progress_tracker.log_resume_info(domains_total)
             
-            if not domains_to_check:
+            if domains_to_check:
+                logger.info(f"待检测域名: {len(domains_to_check)} 个")
+                
+                # 创建处理函数
+                process_func = create_domain_processor(
+                    ssl_checker, db, notifier, progress_tracker, config, dry_run
+                )
+                
+                # 批量并行处理
+                summary = batch_processor.process_all(
+                    domains_to_check,
+                    process_func
+                )
+                
+                # 统计结果
+                if summary:
+                    domains_checked = domains_skipped + summary.total
+                    domains_failed = summary.failed
+                    
+                    for result in summary.results:
+                        if result.success and result.result:
+                            status = result.result.get("status")
+                            if status == SSLStatus.EXPIRING:
+                                domains_expiring += 1
+                            elif status == SSLStatus.EXPIRED:
+                                domains_expired += 1
+                            elif status == SSLStatus.ERROR:
+                                domains_error += 1
+                        elif not result.success:
+                            domains_error += 1
+                else:
+                    domains_checked = domains_skipped
+                    domains_failed = 0
+            else:
                 logger.info(f"所有 {domains_total} 个域名已检测完成，无需处理")
-                task_manager.complete_task(task_date, tier, domains_total, 0)
-                return
-            
-            logger.info(f"待检测域名: {len(domains_to_check)} 个")
-            
-            # 创建处理函数
-            process_func = create_domain_processor(
-                ssl_checker, db, notifier, progress_tracker, config, dry_run
-            )
-            
-            # 批量并行处理
-            summary = batch_processor.process_all(
-                domains_to_check,
-                process_func
-            )
-            
-            # 统计结果
-            domains_checked = domains_skipped + summary.total
-            domains_failed = summary.failed
-            
-            for result in summary.results:
-                if result.success and result.result:
-                    status = result.result.get("status")
-                    if status == SSLStatus.EXPIRING:
-                        domains_expiring += 1
-                    elif status == SSLStatus.EXPIRED:
-                        domains_expired += 1
-                    elif status == SSLStatus.ERROR:
-                        domains_error += 1
-                elif not result.success:
-                    domains_error += 1
+                domains_checked = domains_skipped
             
             # 完成任务
             task_manager.complete_task(task_date, tier, domains_checked, domains_failed)
@@ -678,8 +682,10 @@ def run_monitor(
             else:
                 logger.info(f"[试运行] 跳过发送工作流汇总通知")
             
+            # 日志输出
+            batch_count = summary.total if summary else 0
             logger.info(
-                f"任务完成: 总计 {domains_total}, 本次检测 {summary.total}, "
+                f"任务完成: 总计 {domains_total}, 本次检测 {batch_count}, "
                 f"跳过 {domains_skipped}, 失败 {domains_failed}, "
                 f"耗时 {duration:.1f} 秒"
             )

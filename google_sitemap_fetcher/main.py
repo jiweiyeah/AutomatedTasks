@@ -243,10 +243,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
     if errors:
-        print(f"Completed with {len(errors)} errors", file=sys.stderr)
+        print(f"\n❌ Completed with {len(errors)} errors:", file=sys.stderr)
+        for err in errors:
+            print(f"  - Sitemap: {err.get('sitemap_url')}\n    Error: {err.get('error')}", file=sys.stderr)
         return 2
 
-    print(f"Done. sitemaps={len(fetched_sitemaps)} urls={len(urls)}")
+    print(f"\n✅ Done. sitemaps={len(fetched_sitemaps)} urls={len(urls)}")
     return 0
 
 
