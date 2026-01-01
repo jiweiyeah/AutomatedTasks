@@ -1,0 +1,21 @@
+# 数据库连接
+psycopg2-binary>=2.9.9
+
+# 加密解密
+cryptography>=41.0.0
+
+# CA 证书库（用于补全证书链）
+certifi>=2023.0.0
+
+# HTTP 请求（用于通知发送）
+requests>=2.31.0
+
+# 测试框架
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# 属性测试
+hypothesis>=6.92.0
+
+# 环境变量管理
+python-dotenv>=1.0.0

@@ -1,0 +1,58 @@
+name: Guard SSL Monitor - Premium
+
+on:
+  schedule:
+    # 每天 00:00 UTC 执行（北京时间 08:00）
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "任务日期 (YYYY-MM-DD)"
+        required: false
+        type: string
+      dry_run:
+        description: "试运行模式"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Guard SSL Monitor Premium
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
+          BREVO_SENDER_NAME: ${{ secrets.BREVO_SENDER_NAME }}
+          BRAND_NAME: ${{ vars.BRAND_NAME }}
+          BRAND_URL: ${{ vars.BRAND_URL }}
+          DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
+        run: |
+          ARGS="--tier premium"
+
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            ARGS="$ARGS --date ${{ github.event.inputs.date }}"
+          fi
+
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          python -m src.main $ARGS

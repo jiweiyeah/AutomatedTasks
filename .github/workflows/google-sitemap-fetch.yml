@@ -1,0 +1,64 @@
+name: Google Sitemap Fetch
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: "GSC property siteUrl, e.g. https://example.com/"
+        required: false
+        type: string
+      max_urls:
+        description: "Max URLs to output (0 for unlimited)"
+        required: false
+        type: number
+        default: 200000
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r google_sitemap_fetcher/requirements.txt
+
+      - name: Decode service account key
+        env:
+          GSC_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: |
+          printf '%s' "$GSC_SERVICE_ACCOUNT_JSON_BASE64" | base64 --decode > gsc-service-account.json
+
+      - name: Run sitemap fetch
+        env:
+          SITE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.site_url || vars.GSC_SITE_URL }}
+          MAX_URLS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.max_urls || 200000 }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "SITE_URL is empty. Please set vars.GSC_SITE_URL or input site_url." >&2
+            exit 1
+          fi
+
+          python -m google_sitemap_fetcher.main \
+            --site-url "$SITE_URL" \
+            --service-account-file gsc-service-account.json \
+            --out-dir out \
+            --max-urls "$MAX_URLS"
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sitemap-fetch-output
+          path: out
+          if-no-files-found: error

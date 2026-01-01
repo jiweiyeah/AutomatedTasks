@@ -1,0 +1,200 @@
+{
+  "zh-CN": {
+    "ssl_expired": {
+      "title": "证书已过期 - {domain}",
+      "message": "🚨 域名 {domain} 的 SSL 证书已过期，请立即更新。",
+      "email_subject": "🚨 证书已过期 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 监控的域名 {domain} 的 SSL 证书已过期。\n\n请立即更新证书以避免网站访问问题。\n\n查看详情：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL 证书监控服务"
+    },
+    "ssl_expiring": {
+      "title": "证书即将过期 - {domain}",
+      "message": "⚠️ 域名 {domain} 的 SSL 证书将在 {days_remaining} 天后过期。",
+      "email_subject": "⚠️ 证书即将过期 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 监控的域名 {domain} 的 SSL 证书将在 {days_remaining} 天后过期。\n\n建议您提前更新证书，避免服务中断。\n\n查看详情：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL 证书监控服务"
+    },
+    "ssl_error": {
+      "title": "检查失败 - {domain}",
+      "message": "❌ 域名 {domain} 检查失败：{error_message}",
+      "email_subject": "❌ 检查失败 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 监控的域名 {domain} 检查失败。\n\n错误信息：{error_message}\n\n请检查域名配置是否正确。\n\n查看详情：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL 证书监控服务"
+    },
+    "ssl_valid": {
+      "title": "证书正常 - {domain}",
+      "message": "✅ 域名 {domain} 的 SSL 证书状态正常。",
+      "email_subject": "✅ 证书正常 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 监控的域名 {domain} 的 SSL 证书状态正常。\n\n---\nGuard SSL - SSL 证书监控服务"
+    },
+    "errors": {
+      "CONNECTION_TIMEOUT": "连接超时",
+      "CONNECTION_REFUSED": "连接被拒绝",
+      "DNS_RESOLUTION_FAILED": "DNS 解析失败",
+      "CERT_VERIFICATION_FAILED": "证书验证失败",
+      "UNKNOWN_ERROR": "未知错误"
+    }
+  },
+  "en": {
+    "ssl_expired": {
+      "title": "Certificate Expired - {domain}",
+      "message": "🚨 SSL certificate for {domain} has expired. Please renew immediately.",
+      "email_subject": "🚨 Certificate Expired - {domain} | Guard SSL",
+      "email_body": "The SSL certificate for {domain} monitored by Guard SSL has expired.\n\nPlease renew immediately to avoid website access issues.\n\nView details: https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL Certificate Monitoring"
+    },
+    "ssl_expiring": {
+      "title": "Certificate Expiring - {domain}",
+      "message": "⚠️ SSL certificate for {domain} will expire in {days_remaining} days.",
+      "email_subject": "⚠️ Certificate Expiring - {domain} | Guard SSL",
+      "email_body": "The SSL certificate for {domain} monitored by Guard SSL will expire in {days_remaining} days.\n\nWe recommend renewing before it expires to avoid service interruption.\n\nView details: https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL Certificate Monitoring"
+    },
+    "ssl_error": {
+      "title": "Check Failed - {domain}",
+      "message": "❌ Check failed for {domain}: {error_message}",
+      "email_subject": "❌ Check Failed - {domain} | Guard SSL",
+      "email_body": "The SSL check for {domain} monitored by Guard SSL has failed.\n\nError: {error_message}\n\nPlease verify your domain configuration.\n\nView details: https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL Certificate Monitoring"
+    },
+    "ssl_valid": {
+      "title": "Certificate Valid - {domain}",
+      "message": "✅ SSL certificate for {domain} is valid.",
+      "email_subject": "✅ Certificate Valid - {domain} | Guard SSL",
+      "email_body": "The SSL certificate for {domain} monitored by Guard SSL is valid.\n\n---\nGuard SSL - SSL Certificate Monitoring"
+    },
+    "errors": {
+      "CONNECTION_TIMEOUT": "Connection timeout",
+      "CONNECTION_REFUSED": "Connection refused",
+      "DNS_RESOLUTION_FAILED": "DNS resolution failed",
+      "CERT_VERIFICATION_FAILED": "Certificate verification failed",
+      "UNKNOWN_ERROR": "Unknown error"
+    }
+  },
+  "ja": {
+    "ssl_expired": {
+      "title": "証明書の有効期限切れ - {domain}",
+      "message": "🚨 {domain} のSSL証明書が期限切れです。直ちに更新してください。",
+      "email_subject": "🚨 証明書の有効期限切れ - {domain} | Guard SSL",
+      "email_body": "Guard SSL で監視中の {domain} のSSL証明書が期限切れになりました。\n\nウェブサイトへのアクセス問題を避けるため、直ちに証明書を更新してください。\n\n詳細を見る：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL証明書監視サービス"
+    },
+    "ssl_expiring": {
+      "title": "証明書の有効期限が近づいています - {domain}",
+      "message": "⚠️ {domain} のSSL証明書は {days_remaining} 日後に期限切れになります。",
+      "email_subject": "⚠️ 証明書の有効期限が近づいています - {domain} | Guard SSL",
+      "email_body": "Guard SSL で監視中の {domain} のSSL証明書は {days_remaining} 日後に期限切れになります。\n\nサービス中断を避けるため、期限前に証明書を更新することをお勧めします。\n\n詳細を見る：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL証明書監視サービス"
+    },
+    "ssl_error": {
+      "title": "チェック失敗 - {domain}",
+      "message": "❌ {domain} のチェックに失敗しました：{error_message}",
+      "email_subject": "❌ チェック失敗 - {domain} | Guard SSL",
+      "email_body": "Guard SSL で監視中の {domain} のSSL証明書チェックに失敗しました。\n\nエラー：{error_message}\n\nドメイン設定を確認してください。\n\n詳細を見る：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL証明書監視サービス"
+    },
+    "ssl_valid": {
+      "title": "証明書は有効です - {domain}",
+      "message": "✅ {domain} のSSL証明書は有効です。",
+      "email_subject": "✅ 証明書は有効です - {domain} | Guard SSL",
+      "email_body": "Guard SSL で監視中の {domain} のSSL証明書は有効です。\n\n---\nGuard SSL - SSL証明書監視サービス"
+    },
+    "errors": {
+      "CONNECTION_TIMEOUT": "接続タイムアウト",
+      "CONNECTION_REFUSED": "接続が拒否されました",
+      "DNS_RESOLUTION_FAILED": "DNS解決に失敗しました",
+      "CERT_VERIFICATION_FAILED": "証明書の検証に失敗しました",
+      "UNKNOWN_ERROR": "不明なエラー"
+    }
+  },
+  "zh-TW": {
+    "ssl_expired": {
+      "title": "憑證已過期 - {domain}",
+      "message": "🚨 網域 {domain} 的 SSL 憑證已過期，請立即更新。",
+      "email_subject": "🚨 憑證已過期 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 監控的網域 {domain} 的 SSL 憑證已過期。\n\n請立即更新憑證以避免網站存取問題。\n\n查看詳情：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL 憑證監控服務"
+    },
+    "ssl_expiring": {
+      "title": "憑證即將過期 - {domain}",
+      "message": "⚠️ 網域 {domain} 的 SSL 憑證將在 {days_remaining} 天後過期。",
+      "email_subject": "⚠️ 憑證即將過期 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 監控的網域 {domain} 的 SSL 憑證將在 {days_remaining} 天後過期。\n\n建議您提前更新憑證，避免服務中斷。\n\n查看詳情：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL 憑證監控服務"
+    },
+    "ssl_error": {
+      "title": "檢查失敗 - {domain}",
+      "message": "❌ 網域 {domain} 檢查失敗：{error_message}",
+      "email_subject": "❌ 檢查失敗 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 監控的網域 {domain} 檢查失敗。\n\n錯誤訊息：{error_message}\n\n請檢查網域設定是否正確。\n\n查看詳情：https://guardssl.info/dashboard\n\n---\nGuard SSL - SSL 憑證監控服務"
+    },
+    "ssl_valid": {
+      "title": "憑證正常 - {domain}",
+      "message": "✅ 網域 {domain} 的 SSL 憑證狀態正常。",
+      "email_subject": "✅ 憑證正常 - {domain} | Guard SSL",
+      "email_body": "您在 Guard SSL 監控的網域 {domain} 的 SSL 憑證狀態正常。\n\n---\nGuard SSL - SSL 憑證監控服務"
+    },
+    "errors": {
+      "CONNECTION_TIMEOUT": "連線逾時",
+      "CONNECTION_REFUSED": "連線被拒絕",
+      "DNS_RESOLUTION_FAILED": "DNS 解析失敗",
+      "CERT_VERIFICATION_FAILED": "憑證驗證失敗",
+      "UNKNOWN_ERROR": "未知錯誤"
+    }
+  },
+  "fr": {
+    "ssl_expired": {
+      "title": "Certificat expiré - {domain}",
+      "message": "🚨 Le certificat SSL de {domain} a expiré. Veuillez le renouveler immédiatement.",
+      "email_subject": "🚨 Certificat expiré - {domain} | Guard SSL",
+      "email_body": "Le certificat SSL de {domain} surveillé par Guard SSL a expiré.\n\nVeuillez le renouveler immédiatement pour éviter les problèmes d'accès au site.\n\nVoir les détails : https://guardssl.info/dashboard\n\n---\nGuard SSL - Service de surveillance SSL"
+    },
+    "ssl_expiring": {
+      "title": "Certificat bientôt expiré - {domain}",
+      "message": "⚠️ Le certificat SSL de {domain} expirera dans {days_remaining} jours.",
+      "email_subject": "⚠️ Certificat bientôt expiré - {domain} | Guard SSL",
+      "email_body": "Le certificat SSL de {domain} surveillé par Guard SSL expirera dans {days_remaining} jours.\n\nNous vous recommandons de le renouveler avant son expiration pour éviter toute interruption de service.\n\nVoir les détails : https://guardssl.info/dashboard\n\n---\nGuard SSL - Service de surveillance SSL"
+    },
+    "ssl_error": {
+      "title": "Vérification échouée - {domain}",
+      "message": "❌ La vérification de {domain} a échoué : {error_message}",
+      "email_subject": "❌ Vérification échouée - {domain} | Guard SSL",
+      "email_body": "La vérification SSL de {domain} surveillé par Guard SSL a échoué.\n\nErreur : {error_message}\n\nVeuillez vérifier la configuration de votre domaine.\n\nVoir les détails : https://guardssl.info/dashboard\n\n---\nGuard SSL - Service de surveillance SSL"
+    },
+    "ssl_valid": {
+      "title": "Certificat valide - {domain}",
+      "message": "✅ Le certificat SSL de {domain} est valide.",
+      "email_subject": "✅ Certificat valide - {domain} | Guard SSL",
+      "email_body": "Le certificat SSL de {domain} surveillé par Guard SSL est valide.\n\n---\nGuard SSL - Service de surveillance SSL"
+    },
+    "errors": {
+      "CONNECTION_TIMEOUT": "Délai de connexion dépassé",
+      "CONNECTION_REFUSED": "Connexion refusée",
+      "DNS_RESOLUTION_FAILED": "Échec de la résolution DNS",
+      "CERT_VERIFICATION_FAILED": "Échec de la vérification du certificat",
+      "UNKNOWN_ERROR": "Erreur inconnue"
+    }
+  },
+  "es": {
+    "ssl_expired": {
+      "title": "Certificado expirado - {domain}",
+      "message": "🚨 El certificado SSL de {domain} ha expirado. Por favor, renuévelo inmediatamente.",
+      "email_subject": "🚨 Certificado expirado - {domain} | Guard SSL",
+      "email_body": "El certificado SSL de {domain} monitoreado por Guard SSL ha expirado.\n\nPor favor, renuévelo inmediatamente para evitar problemas de acceso al sitio.\n\nVer detalles: https://guardssl.info/dashboard\n\n---\nGuard SSL - Servicio de monitoreo SSL"
+    },
+    "ssl_expiring": {
+      "title": "Certificado por expirar - {domain}",
+      "message": "⚠️ El certificado SSL de {domain} expirará en {days_remaining} días.",
+      "email_subject": "⚠️ Certificado por expirar - {domain} | Guard SSL",
+      "email_body": "El certificado SSL de {domain} monitoreado por Guard SSL expirará en {days_remaining} días.\n\nLe recomendamos renovarlo antes de que expire para evitar interrupciones del servicio.\n\nVer detalles: https://guardssl.info/dashboard\n\n---\nGuard SSL - Servicio de monitoreo SSL"
+    },
+    "ssl_error": {
+      "title": "Verificación fallida - {domain}",
+      "message": "❌ La verificación de {domain} falló: {error_message}",
+      "email_subject": "❌ Verificación fallida - {domain} | Guard SSL",
+      "email_body": "La verificación SSL de {domain} monitoreado por Guard SSL ha fallado.\n\nError: {error_message}\n\nPor favor, verifique la configuración de su dominio.\n\nVer detalles: https://guardssl.info/dashboard\n\n---\nGuard SSL - Servicio de monitoreo SSL"
+    },
+    "ssl_valid": {
+      "title": "Certificado válido - {domain}",
+      "message": "✅ El certificado SSL de {domain} es válido.",
+      "email_subject": "✅ Certificado válido - {domain} | Guard SSL",
+      "email_body": "El certificado SSL de {domain} monitoreado por Guard SSL es válido.\n\n---\nGuard SSL - Servicio de monitoreo SSL"
+    },
+    "errors": {
+      "CONNECTION_TIMEOUT": "Tiempo de conexión agotado",
+      "CONNECTION_REFUSED": "Conexión rechazada",
+      "DNS_RESOLUTION_FAILED": "Fallo en la resolución DNS",
+      "CERT_VERIFICATION_FAILED": "Fallo en la verificación del certificado",
+      "UNKNOWN_ERROR": "Error desconocido"
+    }
+  }
+}
