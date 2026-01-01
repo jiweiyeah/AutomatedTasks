@@ -64,8 +64,8 @@ def _fetch_bytes(session: requests.Session, url: str, timeout_sec: int) -> bytes
     resp = session.get(
         url,
         timeout=timeout_sec,
-        headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
             "Accept": "application/xml,text/xml,*/*",
         },
     )
