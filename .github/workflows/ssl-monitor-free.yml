@@ -47,11 +47,23 @@ jobs:
         run: |
           ARGS="--tier free"
 
-          if [ -n "${{ github.event.inputs.date }}" ]; then
-            ARGS="$ARGS --date ${{ github.event.inputs.date }}"
+          # 支持 repository_dispatch 和 workflow_dispatch 两种触发方式
+          INPUT_DATE="${{ github.event.client_payload.date }}"
+          INPUT_DRY_RUN="${{ github.event.client_payload.dry_run }}"
+
+          if [ -z "$INPUT_DATE" ]; then
+            INPUT_DATE="${{ github.event.inputs.date }}"
           fi
 
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+          if [ -z "$INPUT_DRY_RUN" ]; then
+            INPUT_DRY_RUN="${{ github.event.inputs.dry_run }}"
+          fi
+
+          if [ -n "$INPUT_DATE" ]; then
+            ARGS="$ARGS --date $INPUT_DATE"
+          fi
+
+          if [ "$INPUT_DRY_RUN" = "true" ]; then
             ARGS="$ARGS --dry-run"
           fi
 
