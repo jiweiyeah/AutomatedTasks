@@ -1,9 +1,8 @@
 name: Guard SSL Monitor - Pro
 
 on:
-  schedule:
-    # 每天 01:00 UTC 执行（北京时间 09:00）
-    - cron: "0 1 * * *"
+  repository_dispatch:
+    types: [trigger-pro-monitor]
   workflow_dispatch:
     inputs:
       date:

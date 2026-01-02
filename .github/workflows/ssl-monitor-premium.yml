@@ -1,9 +1,8 @@
 name: Guard SSL Monitor - Premium
 
 on:
-  schedule:
-    # 每天 00:00 UTC 执行（北京时间 08:00）
-    - cron: "0 0 * * *"
+  repository_dispatch:
+    types: [trigger-premium-monitor]
   workflow_dispatch:
     inputs:
       date:

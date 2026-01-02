@@ -1,9 +1,8 @@
 name: Guard SSL Monitor - Free
 
 on:
-  schedule:
-    # 每天 02:00 UTC 执行（北京时间 10:00）
-    - cron: "0 2 * * *"
+  repository_dispatch:
+    types: [trigger-free-monitor]
   workflow_dispatch:
     inputs:
       date:
