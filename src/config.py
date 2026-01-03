@@ -4,7 +4,7 @@
 """
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 from dotenv import load_dotenv
 
 # 加载 .env 文件
@@ -44,9 +44,9 @@ class Config:
     
     # 飞书通知配置（管理员通知）
     feishu_webhook_url: str = ""
-    
-    # Brevo 邮件 API 配置
-    brevo_api_key: str = ""
+
+    # Brevo 邮件 API 配置（支持多个密钥轮询）
+    brevo_api_keys: List[str] = None
     brevo_sender_email: str = "noreply@guardssl.info"
     brevo_sender_name: str = "GuardSSL"
     
@@ -74,21 +74,36 @@ class Config:
 def load_config() -> Config:
     """
     从环境变量加载配置
-    
+
     Returns:
         Config: 配置对象
-        
+
     Raises:
         ValueError: 必需的环境变量未设置
     """
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         raise ValueError("DATABASE_URL 环境变量未设置")
-    
+
+    # 解析 Brevo API 密钥（支持多个密钥轮询）
+    brevo_api_keys = []
+
+    # 优先使用 BREVO_API_KEYS（逗号分隔的多个密钥）
+    api_keys_str = os.getenv("BREVO_API_KEYS", "")
+    if api_keys_str:
+        # 分割并过滤空字符串
+        brevo_api_keys = [key.strip() for key in api_keys_str.split(",") if key.strip()]
+
+    # 如果没有配置 BREVO_API_KEYS，则使用单个 BREVO_API_KEY（向后兼容）
+    if not brevo_api_keys:
+        single_key = os.getenv("BREVO_API_KEY", "")
+        if single_key:
+            brevo_api_keys = [single_key]
+
     return Config(
         database_url=database_url,
         feishu_webhook_url=os.getenv("FEISHU_WEBHOOK_URL", ""),
-        brevo_api_key=os.getenv("BREVO_API_KEY", ""),
+        brevo_api_keys=brevo_api_keys,
         brevo_sender_email=os.getenv("BREVO_SENDER_EMAIL", "noreply@guardssl.info"),
         brevo_sender_name=os.getenv("BREVO_SENDER_NAME", "GuardSSL"),
         brand_name=os.getenv("BRAND_NAME", "Guard SSL"),

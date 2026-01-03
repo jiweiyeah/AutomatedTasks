@@ -11,10 +11,12 @@ from email.mime.multipart import MIMEMultipart
 from dataclasses import dataclass
 from typing import Optional, Dict, Any, List
 import requests
+import itertools
+import threading
 
 from .config import Config
 from .i18n import (
-    get_message, get_status_key, get_email_template, 
+    get_message, get_status_key, get_email_template,
     translate_error_message, DEFAULT_LANGUAGE
 )
 
@@ -162,15 +164,42 @@ class NotificationError(Exception):
 
 class Notifier:
     """通知发送器"""
-    
+
     def __init__(self, config: Config):
         """
         初始化通知器
-        
+
         Args:
             config: 应用配置
         """
         self.config = config
+
+        # 初始化 Brevo API 密钥轮询器（线程安全）
+        if config.brevo_api_keys:
+            self._api_key_cycle = itertools.cycle(config.brevo_api_keys)
+            self._api_key_lock = threading.Lock()
+            logger.info(f"已配置 {len(config.brevo_api_keys)} 个 Brevo API 密钥，将进行轮询使用")
+        else:
+            self._api_key_cycle = None
+            self._api_key_lock = None
+            logger.warning("未配置 Brevo API 密钥，邮件通知功能将不可用")
+
+    def _get_next_api_key(self) -> Optional[str]:
+        """
+        获取下一个 API 密钥（线程安全的轮询）
+
+        Returns:
+            下一个 API 密钥，如果未配置则返回 None
+        """
+        if not self._api_key_cycle:
+            return None
+
+        with self._api_key_lock:
+            api_key = next(self._api_key_cycle)
+            # 记录日志（只显示前8位，保护隐私）
+            masked_key = api_key[:8] + "..." if len(api_key) > 8 else api_key
+            logger.debug(f"使用 Brevo API 密钥: {masked_key}")
+            return api_key
     
     def send_workflow_summary(self, summary: WorkflowSummary) -> bool:
         """
@@ -284,17 +313,18 @@ class Notifier:
     ) -> bool:
         """
         发送邮件通知（使用 Brevo API）
-        
+
         配置格式: { type: "email", recipients: ["email@example.com"] }
         """
         recipients = config.get("recipients", [])
         if not recipients:
             raise NotificationError(ChannelType.EMAIL, "收件人邮箱未配置")
-        
-        # 检查 Brevo API 配置
-        if not self.config.brevo_api_key:
-            raise NotificationError(ChannelType.EMAIL, "BREVO_API_KEY 未配置")
-        
+
+        # 获取下一个 API 密钥（轮询）
+        api_key = self._get_next_api_key()
+        if not api_key:
+            raise NotificationError(ChannelType.EMAIL, "BREVO_API_KEY 或 BREVO_API_KEYS 未配置")
+
         # 获取 HTML 邮件模板（翻译错误消息，传入品牌配置）
         status_key = get_status_key(payload.status)
         translated_error = translate_error_message(payload.error_message or "", language)
@@ -307,13 +337,13 @@ class Notifier:
             brand_url=self.config.brand_url,
             dashboard_url=self.config.dashboard_url
         )
-        
+
         # 构建收件人列表
         to_list = [
             {"email": email, "name": email.split("@")[0]}
             for email in (recipients if isinstance(recipients, list) else [recipients])
         ]
-        
+
         # 构建请求体
         request_body = {
             "sender": {
@@ -325,19 +355,19 @@ class Notifier:
             "htmlContent": email_template["html"] or "",
             "textContent": payload.to_email_body(language),
         }
-        
+
         # 调用 Brevo API
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
             headers={
                 "accept": "application/json",
-                "api-key": self.config.brevo_api_key,
+                "api-key": api_key,
                 "content-type": "application/json",
             },
             json=request_body,
             timeout=10
         )
-        
+
         if response.status_code in [200, 201]:
             result = response.json()
             logger.info(f"邮件发送成功，Message ID: {result.get('messageId')}")
