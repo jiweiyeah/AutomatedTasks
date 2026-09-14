@@ -36,7 +36,7 @@ jobs:
       - name: Run Guard SSL Monitor Free
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          # FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}  # 已禁用飞书通知
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
           BREVO_SENDER_NAME: ${{ secrets.BREVO_SENDER_NAME }}
