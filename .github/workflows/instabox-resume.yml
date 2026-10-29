@@ -1,0 +1,119 @@
+name: instabox-resume
+
+# 备份看门狗：把被 instabox 平台挂起的产线盒子叫醒。
+#
+# 为什么不放在华为云上：那边已经有一份 minimax_farm_watchdog.sh 做同样的事，
+# 但它跑在一台会 swap 活锁、会被 OOM group-kill 的机器上——它自己先死，
+# 盒子就没人管了。GitHub Actions 跑在 GitHub 的机器上，不依赖任何一台
+# 自有服务器活着，也不占 Mac 的常驻进程。
+#
+# 职责边界：只负责 resume。账号推送是盒子自己 SSH 到 yutou 做的
+# （见 scripts/minimax_box.sh 的 MINIMAX_PUSH_SSH_CMD），台账合并在
+# 华为云侧做——本 workflow 完全不碰 yutou。
+#
+# 触发节奏：免费档盒子单次运行上限 480 分钟（maxRunMinutes 锁死 480），
+# 到点必被平台挂起；resume 后计时器重置，再跑满 480 分钟。
+#
+# 本文件是 cloudflare-register（私有仓库）里同名 workflow 的公开副本，
+# 放在 public 仓库是为了绕开私有免费档的两个坑：schedule 调度器长期
+# 不注册（2026-10-29 实测五个触发点全丢）+ 每月 2000 分钟配额。
+# 逻辑与私有仓库那份同步修改，别只改一边。
+#
+# 间隔 30 分钟不是配额考虑（public 仓库标准 runner 分钟数无限），
+# 而是**相位锁**：480min = 16 个 30min cron 网格周期 ⇒ 停机时刻相对
+# 网格的相位每轮恒定，对齐窗口才有效。别改成 25/20 分钟。
+#
+# ⚠️ 这里刻意**不 sleep 等平台冷却期**（挂起后有 15 分钟 cooldownUntil）：
+#    等冷却交给华为云侧看门狗做（它常驻、不占 CI 分钟），
+#    本 workflow 只在冷却已过时唤醒。
+#
+# 空转代价：稳态下相位锁定（480min = 16 个 30min 网格周期 ⇒ 相位每轮恒定），
+# 每次触发距停机约 -29 分钟 → 走「已挂起即唤醒」，产线空转 ≈29min（8h 的 6%）。
+# 脚本内的对齐窗口专门对付相位漂移（平台恢复耗时波动），稳态下不触发、
+# 不 sleep、不额外占配额。
+#
+# cron 最小 5 分钟间隔，但**整点是调度高峰，任务会排队延迟甚至丢**，
+# 所以错开整点用 23/53 分。
+#
+# ⚠️ public 仓库的 schedule 在 60 天无 commit 后会被自动禁用：
+#    届时 push 一个 commit 即可重新激活。
+
+on:
+  schedule:
+    # UTC。23 分与 53 分 → 每小时两次，避开整点排队高峰。
+    - cron: '23,53 * * * *'
+  # 手动触发：产线异常时不用等 cron，直接点一下。
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '强制 resume（忽略状态判定，仅排障用）'
+        type: boolean
+        default: false
+      manual_stop:
+        description: '人工停机豁免（置 1 则本轮不拉起盒子）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # 同一时间只跑一个，避免和另一条看门狗重复 resume
+  group: instabox-resume
+  cancel-in-progress: false
+
+jobs:
+  resume:
+    runs-on: ubuntu-latest
+    # 脚本最长路径：ALIGN 等待（≤240s）+ 等挂起（≤120s）+ 恢复轮询（≤180s）
+    # ≈ 9 分钟，再留 3 分钟余量。timeout 只是上限，不按它计配额。
+    timeout-minutes: 12
+    env:
+      # API key 存在 repo secret 里，不进仓库、不进日志
+      INSTABOX_API_KEY: ${{ secrets.INSTABOX_API_KEY }}
+      INSTABOX_BOX: minimax-farm
+      INSTABOX_FORCE: ${{ inputs.force && '1' || '0' }}
+      INSTABOX_MANUAL_STOP: ${{ inputs.manual_stop && '1' || '0' }}
+    steps:
+      - name: 拉取续命脚本
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/instabox_resume_guard.sh
+          sparse-checkout-cone-mode: false
+
+      - name: 唤醒盒子
+        run: bash scripts/instabox_resume_guard.sh
+
+      # 失败时把现场打出来：失败原因基本只有两类——源站抽风（AWS ELB
+      # 偶发 TLS 超时），或盒子真出了别的问题。日志能直接区分，不用瞎猜。
+      # ⚠️ 只打状态字段，绝不打 key。
+      - name: 失败诊断
+        if: failure()
+        run: |
+          echo "### 续命失败诊断 @ $(date -u '+%Y-%m-%d %H:%M:%S') UTC" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          for i in 1 2 3; do
+            code=$(curl -sS -m 25 -o /tmp/m.json -w '%{http_code}' \
+              -H "Authorization: Bearer ${INSTABOX_API_KEY}" \
+              -H 'Accept: application/json' \
+              "https://api.instabox.sh/v1/machines/${INSTABOX_BOX}" 2>&1) || code="curl_failed"
+            echo "尝试 $i: HTTP=${code}" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$code" = "200" ]; then
+              jq -r '"state=\(.state) desired=\(.desiredState) runStartedAt=\(.runStartedAt) maxRun=\(.maxRunMinutes) cooldown=\(.cooldownUntil)"' \
+                /tmp/m.json >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+            sleep 5
+          done
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 结果摘要
+        if: always()
+        run: |
+          {
+            echo "### instabox 续命 @ $(date -u '+%Y-%m-%d %H:%M:%S') UTC"
+            echo '```'
+            echo "盒子: $INSTABOX_BOX"
+            echo "强制模式: $INSTABOX_FORCE"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
