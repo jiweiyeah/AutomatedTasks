@@ -42,6 +42,15 @@ on:
   schedule:
     # UTC。23 分与 53 分 → 每小时两次，避开整点排队高峰。
     - cron: '23,53 * * * *'
+  # 外部定时器触发（主力）：GitHub 自家调度器对这个账号形同虚设
+  # （私有仓库 schedule 六个触发点全丢，public 也未触发），
+  # 但 cron-job.org → repository_dispatch 这条路本仓库已稳定跑了几个月
+  # （三个 ssl-monitor 每天准点）。调用方式：
+  #   POST /repos/jiweiyeah/AutomatedTasks/dispatches
+  #   headers: Authorization: Bearer <PAT>（需 repo / Actions 写权限）
+  #   body: {"event_type":"instabox-resume"}
+  repository_dispatch:
+    types: [instabox-resume]
   # 手动触发：产线异常时不用等 cron，直接点一下。
   workflow_dispatch:
     inputs:
