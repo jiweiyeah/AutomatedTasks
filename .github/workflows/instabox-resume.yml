@@ -74,13 +74,14 @@ concurrency:
 jobs:
   resume:
     runs-on: ubuntu-latest
-    # 脚本最长路径：ALIGN 等待（≤240s）+ 等挂起（≤120s）+ 恢复轮询（≤180s）
-    # ≈ 9 分钟，再留 3 分钟余量。timeout 只是上限，不按它计配额。
-    timeout-minutes: 12
+    # 脚本最长路径（每盒）：ALIGN 等待（≤240s）+ 等挂起（≤120s）+ 恢复轮询（≤180s）
+    # ≈ 9 分钟；两盒串行最坏 ~14 分钟，再留余量。timeout 只是上限，不按它计配额。
+    timeout-minutes: 20
     env:
       # API key 存在 repo secret 里，不进仓库、不进日志
       INSTABOX_API_KEY: ${{ secrets.INSTABOX_API_KEY }}
-      INSTABOX_BOX: minimax-farm
+      # 多个盒子用空格分隔，守卫脚本逐盒处理
+      INSTABOX_BOX: 'minimax-farm minimax-farm2'
       INSTABOX_FORCE: ${{ inputs.force && '1' || '0' }}
       INSTABOX_MANUAL_STOP: ${{ inputs.manual_stop && '1' || '0' }}
     steps:
@@ -101,18 +102,21 @@ jobs:
         run: |
           echo "### 续命失败诊断 @ $(date -u '+%Y-%m-%d %H:%M:%S') UTC" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          for i in 1 2 3; do
-            code=$(curl -sS -m 25 -o /tmp/m.json -w '%{http_code}' \
-              -H "Authorization: Bearer ${INSTABOX_API_KEY}" \
-              -H 'Accept: application/json' \
-              "https://api.instabox.sh/v1/machines/${INSTABOX_BOX}" 2>&1) || code="curl_failed"
-            echo "尝试 $i: HTTP=${code}" >> "$GITHUB_STEP_SUMMARY"
-            if [ "$code" = "200" ]; then
-              jq -r '"state=\(.state) desired=\(.desiredState) runStartedAt=\(.runStartedAt) maxRun=\(.maxRunMinutes) cooldown=\(.cooldownUntil)"' \
-                /tmp/m.json >> "$GITHUB_STEP_SUMMARY"
-              break
-            fi
-            sleep 5
+          for BOX in $INSTABOX_BOX; do
+            echo "--- $BOX ---" >> "$GITHUB_STEP_SUMMARY"
+            for i in 1 2 3; do
+              code=$(curl -sS -m 25 -o /tmp/m.json -w '%{http_code}' \
+                -H "Authorization: Bearer ${INSTABOX_API_KEY}" \
+                -H 'Accept: application/json' \
+                "https://api.instabox.sh/v1/machines/${BOX}" 2>&1) || code="curl_failed"
+              echo "尝试 $i: HTTP=${code}" >> "$GITHUB_STEP_SUMMARY"
+              if [ "$code" = "200" ]; then
+                jq -r '"state=\(.state) desired=\(.desiredState) runStartedAt=\(.runStartedAt) maxRun=\(.maxRunMinutes) cooldown=\(.cooldownUntil)"' \
+                  /tmp/m.json >> "$GITHUB_STEP_SUMMARY"
+                break
+              fi
+              sleep 5
+            done
           done
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
