@@ -81,7 +81,9 @@ jobs:
       # API key 存在 repo secret 里，不进仓库、不进日志
       INSTABOX_API_KEY: ${{ secrets.INSTABOX_API_KEY }}
       # 多个盒子用空格分隔，守卫脚本逐盒处理
-      INSTABOX_BOX: 'minimax-farm minimax-farm2'
+      # dev 盒 2026-10-30 加入：跑 aisa 产线（Clerk 邮箱码注册），
+      # 同样受免费档 480min 挂起约束，需要续命。
+      INSTABOX_BOX: 'minimax-farm minimax-farm2 dev'
       INSTABOX_FORCE: ${{ inputs.force && '1' || '0' }}
       INSTABOX_MANUAL_STOP: ${{ inputs.manual_stop && '1' || '0' }}
     steps:
