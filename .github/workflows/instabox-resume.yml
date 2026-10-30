@@ -14,43 +14,30 @@ name: instabox-resume
 # 触发节奏：免费档盒子单次运行上限 480 分钟（maxRunMinutes 锁死 480），
 # 到点必被平台挂起；resume 后计时器重置，再跑满 480 分钟。
 #
-# 本文件是 cloudflare-register（私有仓库）里同名 workflow 的公开副本，
-# 放在 public 仓库是为了绕开私有免费档的两个坑：schedule 调度器长期
-# 不注册（2026-10-29 实测五个触发点全丢）+ 每月 2000 分钟配额。
-# 逻辑与私有仓库那份同步修改，别只改一边。
-#
-# 间隔 30 分钟不是配额考虑（public 仓库标准 runner 分钟数无限），
-# 而是**相位锁**：480min = 16 个 30min cron 网格周期 ⇒ 停机时刻相对
-# 网格的相位每轮恒定，对齐窗口才有效。别改成 25/20 分钟。
+# 间隔 30 分钟是**配额内的最优点**：GitHub Actions 私有仓库免费 2000 分钟/月，
+# 48 次/天 × 1 分钟 × 30 天 = 1440 分钟，留 28% 余量。
+# 加密到 15 分钟要 2880 分钟（超额度），10 分钟要 4320 分钟。
 #
 # ⚠️ 这里刻意**不 sleep 等平台冷却期**（挂起后有 15 分钟 cooldownUntil）：
-#    等冷却交给华为云侧看门狗做（它常驻、不占 CI 分钟），
-#    本 workflow 只在冷却已过时唤醒。
+#    一天 3 次事件 × 15 分钟 = 2700 分钟/月，直接超额度。等冷却这件事交给
+#    华为云侧看门狗（不消耗 Actions 配额），本 workflow 只在冷却已过时唤醒，
+#    保住「每轮 ≤1 分钟」的配额预算。
 #
 # 空转代价：稳态下相位锁定（480min = 16 个 30min 网格周期 ⇒ 相位每轮恒定），
 # 每次触发距停机约 -29 分钟 → 走「已挂起即唤醒」，产线空转 ≈29min（8h 的 6%）。
 # 脚本内的对齐窗口专门对付相位漂移（平台恢复耗时波动），稳态下不触发、
 # 不 sleep、不额外占配额。
 #
-# cron 最小 5 分钟间隔，但**整点是调度高峰，任务会排队延迟甚至丢**，
+# GitHub cron 最小 5 分钟间隔，但**私有仓库在整点高峰会排队延迟甚至丢任务**，
 # 所以错开整点用 23/53 分。
 #
-# ⚠️ public 仓库的 schedule 在 60 天无 commit 后会被自动禁用：
-#    届时 push 一个 commit 即可重新激活。
+# 多盒（2026-10-29 farm2 上线）：INSTABOX_BOX 传空格分隔的盒名列表，
+# 守卫脚本逐盒独立判定，任一失败整体标红。
 
 on:
   schedule:
     # UTC。23 分与 53 分 → 每小时两次，避开整点排队高峰。
     - cron: '23,53 * * * *'
-  # 外部定时器触发（主力）：GitHub 自家调度器对这个账号形同虚设
-  # （私有仓库 schedule 六个触发点全丢，public 也未触发），
-  # 但 cron-job.org → repository_dispatch 这条路本仓库已稳定跑了几个月
-  # （三个 ssl-monitor 每天准点）。调用方式：
-  #   POST /repos/jiweiyeah/AutomatedTasks/dispatches
-  #   headers: Authorization: Bearer <PAT>（需 repo / Actions 写权限）
-  #   body: {"event_type":"instabox-resume"}
-  repository_dispatch:
-    types: [instabox-resume]
   # 手动触发：产线异常时不用等 cron，直接点一下。
   workflow_dispatch:
     inputs:
@@ -81,9 +68,11 @@ jobs:
       # API key 存在 repo secret 里，不进仓库、不进日志
       INSTABOX_API_KEY: ${{ secrets.INSTABOX_API_KEY }}
       # 多个盒子用空格分隔，守卫脚本逐盒处理
-      # dev 盒 2026-10-30 加入：跑 aisa 产线（Clerk 邮箱码注册），
-      # 同样受免费档 480min 挂起约束，需要续命。
-      INSTABOX_BOX: 'minimax-farm minimax-farm2 dev'
+      # dev 盒 2026-10-30 加入：跑 aisa 产线（见 scripts/aisa_box.sh），
+      # 同样受 480min 挂起约束，需要续命。
+      # aisa-farm2 盒 2026-10-30 加入：aisa 产线专用盒（全新 IP，
+      # 用于验证试用额度发放是否按出口 IP 判定）。
+      INSTABOX_BOX: 'minimax-farm minimax-farm2 dev aisa-farm2'
       INSTABOX_FORCE: ${{ inputs.force && '1' || '0' }}
       INSTABOX_MANUAL_STOP: ${{ inputs.manual_stop && '1' || '0' }}
     steps:
