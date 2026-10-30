@@ -85,6 +85,29 @@ jobs:
       - name: 唤醒盒子
         run: bash scripts/instabox_resume_guard.sh
 
+      # 名单只有这一处（INSTABOX_BOX），但**平台上的盒子比名单多**是常态：
+      # 新开一台盒忘了加进名单 → 它挂起后没人唤醒，而 workflow 照样 success，
+      # 静默到产线停摆才发现（2026-10-30 踩过：public 副本与本地仓库各存
+      # 一份名单，靠人手同步，新盒差点漏掉）。
+      # 这里拿平台实际机器列表与名单做差集，漏了立刻告警。
+      - name: 盒名覆盖检查
+        if: always()
+        run: |
+          all=$(curl -sS -m 30 -H "Authorization: Bearer ${INSTABOX_API_KEY}" \
+            https://api.instabox.sh/v1/machines | jq -r '.machines[].name' | sort -u)
+          covered=$(printf '%s\n' ${INSTABOX_BOX} | sort -u)
+          missing=$(comm -23 <(printf '%s\n' "$all") <(printf '%s\n' "$covered"))
+          echo "### 盒名覆盖检查" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "续命名单: ${INSTABOX_BOX}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$missing" ]; then
+            echo "⚠️ 未纳入续命名单的盒子: $(echo ${missing} | tr '\n' ' ')" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::未纳入续命名单的盒子: $(echo ${missing} | tr '\n' ' ')"
+          else
+            echo "✅ 平台全部盒子均已纳入续命名单" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
       # 失败时把现场打出来：失败原因基本只有两类——源站抽风（AWS ELB
       # 偶发 TLS 超时），或盒子真出了别的问题。日志能直接区分，不用瞎猜。
       # ⚠️ 只打状态字段，绝不打 key。
