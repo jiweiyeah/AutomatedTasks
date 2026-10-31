@@ -45,6 +45,8 @@ on:
   #    **不生成 run**（POST /dispatches 返回 204 看着像成功）⇒ 主力链静默死了
   #    23.5 小时，直到盒挂起没人叫醒才发现。
   #    ⇒ 改这份 workflow 时**不要动 on: 段**，改名单只改 INSTABOX_BOX。
+  #    ✅ 2026-10-31 两份都已修好：private（jiweiyeah/cloudflare-register
+  #    fd47828）同样加回了这个触发器，两边 on: 段现已一致。
   repository_dispatch:
     types: [instabox-resume]
   # 手动触发：产线异常时不用等 cron，直接点一下。
