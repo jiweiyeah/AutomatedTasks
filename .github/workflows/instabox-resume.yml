@@ -38,6 +38,15 @@ on:
   schedule:
     # UTC。23 分与 53 分 → 每小时两次，避开整点排队高峰。
     - cron: '23,53 * * * *'
+  # ⚠️ **外部定时器入口（cron-job.org → repository_dispatch）——主力触发链**。
+  #    2026-10-31 实测事故：cf609b1 那次改名单时把这个触发器连同注释一起删掉了
+  #    （同步两份 workflow 时按「private 仓库那份」覆盖，private 那份从来没有
+  #    这个触发器）⇒ cron-job.org 每半小时照常 POST，但 GitHub 收下事件却
+  #    **不生成 run**（POST /dispatches 返回 204 看着像成功）⇒ 主力链静默死了
+  #    23.5 小时，直到盒挂起没人叫醒才发现。
+  #    ⇒ 改这份 workflow 时**不要动 on: 段**，改名单只改 INSTABOX_BOX。
+  repository_dispatch:
+    types: [instabox-resume]
   # 手动触发：产线异常时不用等 cron，直接点一下。
   workflow_dispatch:
     inputs:
@@ -72,7 +81,12 @@ jobs:
       # 同样受 480min 挂起约束，需要续命。
       # aisa-farm2 盒 2026-10-30 加入：aisa 产线专用盒（全新 IP，
       # 用于验证试用额度发放是否按出口 IP 判定）。
-      INSTABOX_BOX: 'minimax-farm minimax-farm2 dev aisa-farm2'
+      # monid-farm 盒 2026-10-31 加入：monid 产线专用盒（见 scripts/monid_box.sh）。
+      #   ⚠️ 漏了它 2026-10-31 出过事：盒在 09:23Z 被平台 480min 上限挂起，
+      #   名单里没有 ⇒ 没人叫醒 ⇒ 产线停了 1 小时（本机手动 resume 才活）。
+      #   盒名覆盖检查当时已经报了 `未纳入续命名单的盒子: monid-farm`，
+      #   但只是 warning 没人看 ⇒ **新增盒子必须改这一行**。
+      INSTABOX_BOX: 'minimax-farm minimax-farm2 dev aisa-farm2 monid-farm'
       INSTABOX_FORCE: ${{ inputs.force && '1' || '0' }}
       INSTABOX_MANUAL_STOP: ${{ inputs.manual_stop && '1' || '0' }}
     steps:
